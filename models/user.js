@@ -1,5 +1,6 @@
 const { model, Schema } = require("mongoose");
-const user = new Schema(
+const { HandleMongooseError } = require("../helpers");
+const userSchema = new Schema(
   {
     password: {
       type: String,
@@ -22,3 +23,6 @@ const user = new Schema(
   },
   { versionKey: false, timestamps: true }
 );
+userSchema.post("save", HandleMongooseError);
+const User = model("user", userSchema);
+module.exports = User;
