@@ -19,8 +19,14 @@ const favoriteSchema = Joi.object({
     .messages({ "any.required": "missing field favorite" }),
 });
 const getContacts = async (req, res, next) => {
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 5 } = req.query;
+  const skip = (page - 1) * limit;
   try {
-    const results = await Contacts.find({}, "-createdAt -updatedAt");
+    const results = await Contacts.find({ owner }, "-createdAt -updatedAt", {
+      skip,
+      limit,
+    }).populate("owner", "email");
     res.status(200).json(results);
   } catch (error) {
     next(error);
@@ -42,12 +48,13 @@ const getContactById = async (req, res, next) => {
   }
 };
 const addContact = async (req, res, next) => {
+  const { _id: owner } = req.user;
   try {
     const { error } = schema.validate(req.body);
     if (error) {
       throw HttpError(400, error.message);
     }
-    const result = await Contacts.create(req.body);
+    const result = await Contacts.create({ ...req.body, owner });
     res.status(201).json(result);
   } catch (error) {
     next(error);

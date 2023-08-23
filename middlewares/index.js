@@ -1,6 +1,6 @@
-const HandleMongooseError = require("./HandleMongooseError");
 const isValidId = require("./isValidId");
+const checkTokenValidate = require("./checkTokenValidate");
 module.exports = {
-  HandleMongooseError,
   isValidId,
+  checkTokenValidate,
 };
