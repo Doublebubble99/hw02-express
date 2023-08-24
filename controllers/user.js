@@ -1,6 +1,11 @@
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
+const Jimp = require("jimp");
+const path = require("path");
+const fs = require("fs/promises");
+const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 const { HttpError } = require("../helpers");
 const User = require("../models/user");
 const { SECRET_KEY } = process.env;
@@ -24,7 +29,12 @@ const register = async (req, res, next) => {
       throw HttpError(409, "Email in use");
     }
     const hash = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ ...req.body, password: hash });
+    const url = gravatar.url(email);
+    const newUser = await User.create({
+      ...req.body,
+      password: hash,
+      avatarUrl: url,
+    });
     const { subscription } = newUser;
     res.status(201).json({ user: { email: newUser.email, subscription } });
   } catch (error) {
@@ -61,7 +71,7 @@ const logout = async (req, res, next) => {
   const { _id } = req.user;
   try {
     await User.findByIdAndUpdate(_id, { token: null });
-    res.status(204).json({ message: "No content" });
+    res.status(204).send();
   } catch (error) {
     next(error);
   }
@@ -74,4 +84,33 @@ const current = async (req, res, next) => {
     next(error);
   }
 };
-module.exports = { register, login, logout, current };
+const updateAvatar = async (req, res, next) => {
+  const { _id } = req.user;
+  const { path: temporaryDir, originalname } = req.file;
+  try {
+    const fileName = `${_id}_${originalname}`;
+    const resultDir = path.join(avatarsDir, fileName);
+    const image = await Jimp.read(temporaryDir);
+    await image.resize(250, 250);
+    await fs.rename(temporaryDir, resultDir);
+    await image.write(resultDir);
+
+    const avatarUrl = path.join("avatars", fileName);
+
+    await User.findByIdAndUpdate(_id, {
+      avatarUrl,
+    });
+
+    res.status(200).json({ avatarUrl });
+  } catch (error) {
+    await fs.unlink(temporaryDir);
+    next(error);
+  }
+};
+module.exports = {
+  register,
+  login,
+  logout,
+  current,
+  updateAvatar,
+};
