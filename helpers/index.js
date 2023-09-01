@@ -1,8 +1,8 @@
 const HttpError = require("./HttpError");
 const HandleMongooseError = require("./HandleMongooseError");
-const isAccessibleFile = require("./isAccesibleFile");
+const sendEmail = require("./sendEmail");
 module.exports = {
   HttpError,
   HandleMongooseError,
-  isAccessibleFile,
+  sendEmail,
 };

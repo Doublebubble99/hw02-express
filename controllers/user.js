@@ -2,16 +2,14 @@ const Joi = require("joi");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { nanoid } = require("nanoid");
-const sgMail = require("@sendgrid/mail");
 const gravatar = require("gravatar");
 const Jimp = require("jimp");
 const path = require("path");
 const fs = require("fs/promises");
 const avatarsDir = path.join(__dirname, "../", "public", "avatars");
-const { HttpError } = require("../helpers");
+const { HttpError, sendEmail } = require("../helpers");
 const User = require("../models/user");
-const { SECRET_KEY, SENDGRID_API_KEY, BASE_URL } = process.env;
-sgMail.setApiKey(SENDGRID_API_KEY);
+const { SECRET_KEY, BASE_URL } = process.env;
 const userSchema = Joi.object({
   email: Joi.string()
     .required()
@@ -45,21 +43,12 @@ const register = async (req, res, next) => {
       avatarUrl: url,
       verificationToken,
     });
-    const msg = {
+    await sendEmail({
       to: email,
-      from: "zagrousaspear@gmail.com",
       subject: "Verification",
       text: "Please click here to verify your email",
       html: `<a href='${BASE_URL}/users/verify/${verificationToken}' target='_blank'>Please click here to verify your email</a>`,
-    };
-    await sgMail
-      .send(msg)
-      .then(() => {
-        console.log("Email sent");
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    });
     const { subscription } = newUser;
     res.status(201).json({ user: { email: newUser.email, subscription } });
   } catch (error) {
@@ -163,21 +152,13 @@ const resendVerify = async (req, res, next) => {
     if (user.verify) {
       res.status(400).json({ message: "Verification has already been passed" });
     }
-    const msg = {
+    await sendEmail({
       to: email,
-      from: "zagrousaspear@gmail.com",
       subject: "Verification",
       text: "Please click here to verify your email",
       html: `<a href='${BASE_URL}/users/verify/${user.verificationToken}' target='_blank'>Please click here to verify your email</a>`,
-    };
-    sgMail
-      .send(msg)
-      .then(() => {
-        res.status(200).json({ message: "Verification email sent" });
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    });
+    res.status(200).json({ message: "Verification email sent" });
   } catch (error) {
     next(error);
   }
