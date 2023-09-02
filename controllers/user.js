@@ -45,8 +45,6 @@ const register = async (req, res, next) => {
     });
     await sendEmail({
       to: email,
-      subject: "Verification",
-      text: "Please click here to verify your email",
       html: `<a href='${BASE_URL}/users/verify/${verificationToken}' target='_blank'>Please click here to verify your email</a>`,
     });
     const { subscription } = newUser;
@@ -154,8 +152,6 @@ const resendVerify = async (req, res, next) => {
     }
     await sendEmail({
       to: email,
-      subject: "Verification",
-      text: "Please click here to verify your email",
       html: `<a href='${BASE_URL}/users/verify/${user.verificationToken}' target='_blank'>Please click here to verify your email</a>`,
     });
     res.status(200).json({ message: "Verification email sent" });

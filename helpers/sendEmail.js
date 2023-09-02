@@ -5,6 +5,8 @@ sgMail.setApiKey(SENDGRID_API_KEY);
 const sendEmail = async (data) => {
   const msg = {
     from: "zagrousaspear@gmail.com",
+    subject: "Verification",
+    text: "Please click here to verify your email",
     ...data,
   };
   await sgMail
