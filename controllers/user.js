@@ -148,7 +148,9 @@ const resendVerify = async (req, res, next) => {
     }
     const user = await User.findOne({ email });
     if (user.verify) {
-      res.status(400).json({ message: "Verification has already been passed" });
+      return res
+        .status(400)
+        .json({ message: "Verification has already been passed" });
     }
     await sendEmail({
       to: email,
